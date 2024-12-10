@@ -153,3 +153,16 @@ class UserDAO:
             else:
                 logger.warning(f"No user found to update: {user_id}")
             return result
+
+    def delete_user_by_email(self, email):
+        """Delete a user by their email."""
+        logger.info(f"Deleting user with email: {email}")
+        query = {"email": email}
+        with self.db_client as db_client:
+            result = db_client.delete_one(self.collection_name, query)
+            if result.deleted_count > 0:
+                logger.info(f"User with email {email} deleted successfully.")
+            else:
+                logger.warning(f"No user found with email: {email}")
+            return result
+
