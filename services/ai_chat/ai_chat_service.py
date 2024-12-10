@@ -91,7 +91,7 @@ class AIChatService:
                 ),
                 ResponseSchema(
                     name="Estimated Calories Burned",
-                    description="Estimated calories burned during the workout",
+                    description="Estimated calories burned during the workout, just one number not a range",
                 ),
                 ResponseSchema(
                     name="Equipment Needed",
@@ -103,7 +103,7 @@ class AIChatService:
                 ),
                 ResponseSchema(
                     name="Total Calories Burned",
-                    description="Total calories burned for the entire workout plan",
+                    description="Total calories burned for the entire workout plan, just one number not a range",
                 ),
             ]
             self.parser = StructuredOutputParser.from_response_schemas(
