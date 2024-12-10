@@ -6,8 +6,9 @@ Fitness Goal Service
 """
 
 from daos.workout.fitness_goal_dao import FitnessGoalDAO
+from services.workout.validation import \
+    CreateOrUpdateGoalRequest  # Import validation model
 from utils.logger import Logger
-from services.workout.validation import CreateOrUpdateGoalRequest  # Import validation model
 
 logger = Logger(__name__)
 
@@ -86,7 +87,9 @@ class FitnessGoalService:
         validated_data = CreateOrUpdateGoalRequest(**update_fields)
 
         # Call the DAO layer to perform field updates
-        result = dao.update_fitness_goal(user_id, validated_data.dict(exclude_unset=True))
+        result = dao.update_fitness_goal(
+            user_id, validated_data.dict(exclude_unset=True)
+        )
 
         # Extract serializable fields from the result
         serialized_result = {
@@ -98,7 +101,10 @@ class FitnessGoalService:
         # Return results
         if serialized_result["matched_count"] > 0:
             logger.info(f"Fitness goal updated successfully for user_id: {user_id}")
-            return {"message": "Fitness goal updated successfully", "data": serialized_result}
+            return {
+                "message": "Fitness goal updated successfully",
+                "data": serialized_result,
+            }
         else:
             logger.warning(f"No fitness goal found to update for user_id: {user_id}")
             return {"message": "No fitness goal found to update", "data": None}

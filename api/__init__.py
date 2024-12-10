@@ -8,7 +8,9 @@ API Router Initialization
 # api/__init__.py
 
 from fastapi import APIRouter
+
 from api.v1 import router as v1_router
+
 # from api.v2 import router as v2_router  # Placeholder for a future v2 version
 
 # Create a top-level router object

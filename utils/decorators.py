@@ -4,16 +4,18 @@ Custom JSON Encoder and Response Handler
 @Date: 2024-10-20
 @Author: Adam Lyu
 """
-import os
-from functools import wraps
-from fastapi.responses import JSONResponse
-from marshmallow import ValidationError
-from fastapi import HTTPException
-from bson import ObjectId  # Import ObjectId for MongoDB handling
-from datetime import datetime  # Import datetime for date serialization
-from utils.env_loader import load_platform_specific_env
+
 import json
 import logging
+from datetime import datetime  # Import datetime for date serialization
+from functools import wraps
+
+from bson import ObjectId  # Import ObjectId for MongoDB handling
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse
+from marshmallow import ValidationError
+
+from utils.env_loader import load_platform_specific_env
 
 # Load environment-specific configurations
 load_platform_specific_env()
@@ -39,6 +41,7 @@ def handle_response(f):
     - Serialize the response using a custom JSON encoder.
     - Handle exceptions and return appropriate HTTP responses.
     """
+
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         try:

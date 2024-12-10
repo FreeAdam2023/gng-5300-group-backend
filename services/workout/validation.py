@@ -5,8 +5,9 @@ Create or Update Goal Request Validation Schema
 @Author: Adam Lyu
 """
 
-from pydantic import BaseModel, field_validator
 from typing import List, Optional
+
+from pydantic import BaseModel, field_validator
 
 
 class CreateOrUpdateGoalRequest(BaseModel):
@@ -48,8 +49,18 @@ class CreateOrUpdateGoalRequest(BaseModel):
         """
         Validate that each value in rest_days is a valid day of the week.
         """
-        valid_days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+        valid_days = {
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        }
         for day in value:
             if day not in valid_days:
-                raise ValueError(f"Invalid rest day: {day}. Must be one of {valid_days}")
+                raise ValueError(
+                    f"Invalid rest day: {day}. Must be one of {valid_days}"
+                )
         return value

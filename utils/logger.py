@@ -1,8 +1,9 @@
+import json
 import logging
 import os
 import uuid
 from logging.handlers import RotatingFileHandler
-import json
+
 from utils.env_loader import load_platform_specific_env
 
 load_platform_specific_env()
@@ -43,7 +44,14 @@ class JsonFormatter(logging.Formatter):
 
 
 class Logger:
-    def __init__(self, name, level=None, log_dir="logs", log_file="application.log", audit_log_file="audit.log"):
+    def __init__(
+        self,
+        name,
+        level=None,
+        log_dir="logs",
+        log_file="application.log",
+        audit_log_file="audit.log",
+    ):
         """
         Initialize the Logger.
 
@@ -54,7 +62,7 @@ class Logger:
         :param audit_log_file: Audit log file name
         """
         if level is None:
-            level = logging.DEBUG if os.getenv('DEBUG', False) else logging.INFO
+            level = logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO
 
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -64,20 +72,30 @@ class Logger:
         self.logger.setLevel(level)
 
         app_log_path = os.path.join(log_dir, log_file)
-        app_file_handler = RotatingFileHandler(app_log_path, maxBytes=10 * 1024 * 1024, backupCount=5)
-        app_file_handler.setFormatter(JsonFormatter(json_format=True))  # Use JSON format for file logs
+        app_file_handler = RotatingFileHandler(
+            app_log_path, maxBytes=10 * 1024 * 1024, backupCount=5
+        )
+        app_file_handler.setFormatter(
+            JsonFormatter(json_format=True)
+        )  # Use JSON format for file logs
         self.logger.addHandler(app_file_handler)
 
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(JsonFormatter(json_format=False))  # Use standard format for console logs
+        console_handler.setFormatter(
+            JsonFormatter(json_format=False)
+        )  # Use standard format for console logs
         self.logger.addHandler(console_handler)
 
         # Audit logs
         audit_log_path = os.path.join(log_dir, audit_log_file)
         self.audit_logger = logging.getLogger(f"{name}_audit")
         self.audit_logger.setLevel(level)
-        audit_file_handler = RotatingFileHandler(audit_log_path, maxBytes=10 * 1024 * 1024, backupCount=5)
-        audit_file_handler.setFormatter(JsonFormatter(json_format=True))  # Use JSON format for audit file logs
+        audit_file_handler = RotatingFileHandler(
+            audit_log_path, maxBytes=10 * 1024 * 1024, backupCount=5
+        )
+        audit_file_handler.setFormatter(
+            JsonFormatter(json_format=True)
+        )  # Use JSON format for audit file logs
         self.audit_logger.addHandler(audit_file_handler)
 
     def info(self, message):
@@ -124,4 +142,5 @@ class Logger:
     def _get_current_time():
         """Get the current time in ISO 8601 format."""
         from datetime import datetime
+
         return datetime.utcnow().isoformat()

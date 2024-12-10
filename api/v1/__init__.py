@@ -2,14 +2,15 @@
 @Time ： 2024-11-03
 @Auth ： Adam Lyu
 """
+
 # api/v1/__init__.py
 
 from fastapi import APIRouter
+
+from api.v1.ai_chat import router as ai_chat_router
 from api.v1.health import router as health_router
 from api.v1.user import router as user_router
 from api.v1.workout import router as workout_router
-from api.v1.ai_chat import router as ai_chat_router
-
 
 router = APIRouter()
 router.include_router(health_router, tags=["health"])

@@ -1,11 +1,13 @@
 import json
 import os
 from pathlib import Path
+
+from jsonschema import ValidationError, validate
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, CollectionInvalid
-from jsonschema import validate, ValidationError
-from utils.logger import Logger
+from pymongo.errors import CollectionInvalid
+
 from utils.env_loader import load_platform_specific_env
+from utils.logger import Logger
 
 logger = Logger(__name__)
 # Dynamically load environment variables based on OS and hostname
@@ -14,8 +16,8 @@ load_platform_specific_env()
 
 class MongoDBClient:
     def __init__(self, db_name=None):
-        self.db_name = db_name if db_name else os.getenv('MONGO_DATABASE', 'fitness_db')
-        self.uri = os.getenv('MONGO_URI')
+        self.db_name = db_name if db_name else os.getenv("MONGO_DATABASE", "fitness_db")
+        self.uri = os.getenv("MONGO_URI")
 
         if not self.uri:
             raise ValueError("MONGO_URI environment variable is not set!")
@@ -30,11 +32,15 @@ class MongoDBClient:
         """Connect to MongoDB and test connection"""
         if not self.client:
             try:
-                logger.info(f"Connecting to MongoDB: URI={self.uri}, DB_NAME={self.db_name}")
+                logger.info(
+                    f"Connecting to MongoDB: URI={self.uri}, DB_NAME={self.db_name}"
+                )
                 self.client = MongoClient(self.uri, tlsAllowInvalidCertificates=True)
                 self.db = self.client[self.db_name]
-                self.client.admin.command('ping')
-                logger.info(f"Successfully connected to MongoDB database: {self.db_name}")
+                self.client.admin.command("ping")
+                logger.info(
+                    f"Successfully connected to MongoDB database: {self.db_name}"
+                )
             except Exception as e:
                 logger.error(f"Failed to connect to MongoDB: {str(e)}")
                 self.db = None
@@ -72,7 +78,9 @@ class MongoDBClient:
             with open(schema_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except StopIteration:
-            logger.error(f"Schema file not found: {schema_filename} in {base_path.resolve()} or its subdirectories.")
+            logger.error(
+                f"Schema file not found: {schema_filename} in {base_path.resolve()} or its subdirectories."
+            )
             raise FileNotFoundError(
                 f"Schema file not found: {schema_filename} in {base_path.resolve()} or its subdirectories."
             )
@@ -105,8 +113,10 @@ class MongoDBClient:
             logger.info(f"Collection '{collection_name}' already exists.")
 
         schema = self._load_validation_schema(schema_filename)
-        logger.warning(f"Schema validation is not supported in the database. "
-                       f"Validation will be performed at the application level for collection: {collection_name}")
+        logger.warning(
+            f"Schema validation is not supported in the database. "
+            f"Validation will be performed at the application level for collection: {collection_name}"
+        )
 
         return schema
 
@@ -115,7 +125,9 @@ class MongoDBClient:
         Insert a single document into a collection with optional schema validation.
         """
         if self.db is None:
-            raise RuntimeError("Database connection is not initialized. Did you forget to use the context manager?")
+            raise RuntimeError(
+                "Database connection is not initialized. Did you forget to use the context manager?"
+            )
 
         if schema:
             self.validate_data(data, schema)
@@ -139,7 +151,9 @@ class MongoDBClient:
                 if key.startswith("$"):
                     raise ValueError(f"Illegal field name in update_data: {key}")
 
-        logger.debug(f"Updating {collection_name} with query: {query}, update: {update}")
+        logger.debug(
+            f"Updating {collection_name} with query: {query}, update: {update}"
+        )
         collection = self.db[collection_name]
         return collection.update_one(query, update)
 
@@ -157,7 +171,9 @@ class MongoDBClient:
         Returns:
             dict: The found document, or None if no document matches the query.
         """
-        logger.info(f"Finding one document in collection: {collection_name} with query: {query}")
+        logger.info(
+            f"Finding one document in collection: {collection_name} with query: {query}"
+        )
 
         # Exclude soft-deleted documents unless explicitly allowed
         if not include_deleted:
@@ -169,25 +185,6 @@ class MongoDBClient:
         logger.info(f"Find one result: {result}")
         return result
 
-    def insert_many(self, collection_name, data_list, schema=None):
-        """
-        Insert multiple documents into a collection with optional schema validation.
-        :param collection_name: Target collection name
-        :param data_list: List of document data to insert
-        :param schema: JSON Schema for validation
-        """
-        if schema:
-            for data in data_list:
-                self.validate_data(data, schema)
-
-        logger.info(f"Inserting many documents into collection: {collection_name}")
-        for data in data_list:
-            data["is_deleted"] = False
-        collection = self.db[collection_name]
-        result = collection.insert_many(data_list)
-        logger.info(f"Documents inserted with IDs: {result.inserted_ids}")
-        return result.inserted_ids
-
     def delete_one(self, collection_name, query, soft_delete=True):
         """
         Delete a single document, performing a soft delete by default.
@@ -195,19 +192,27 @@ class MongoDBClient:
         :param query: Query to identify the document
         :param soft_delete: If True, perform a soft delete by setting is_deleted to True
         """
-        logger.info(f"Deleting one document in collection: {collection_name} with query: {query}")
+        logger.info(
+            f"Deleting one document in collection: {collection_name} with query: {query}"
+        )
         collection = self.db[collection_name]
 
         if soft_delete:
             update_data = {"is_deleted": True}
             result = collection.update_one(query, {"$set": update_data})
-            logger.info(f"Soft delete result: {result.modified_count} document(s) modified")
+            logger.info(
+                f"Soft delete result: {result.modified_count} document(s) modified"
+            )
         else:
             result = collection.delete_one(query)
-            logger.info(f"Physical delete result: {result.deleted_count} document(s) deleted")
+            logger.info(
+                f"Physical delete result: {result.deleted_count} document(s) deleted"
+            )
         return result
 
-    def find_many(self, collection_name, query, include_deleted=False, sort=None, limit=0, skip=0):
+    def find_many(
+            self, collection_name, query, include_deleted=False, sort=None, limit=0, skip=0
+    ):
         """
         Find multiple documents, supporting sorting, limit, and skip options.
         :param collection_name: Target collection name
@@ -217,7 +222,9 @@ class MongoDBClient:
         :param limit: Number of documents to return
         :param skip: Number of documents to skip
         """
-        logger.info(f"Finding many documents in collection: {collection_name} with query: {query}")
+        logger.info(
+            f"Finding many documents in collection: {collection_name} with query: {query}"
+        )
         if not include_deleted:
             query["is_deleted"] = False
         collection = self.db[collection_name]
@@ -260,7 +267,9 @@ class MongoDBClient:
         :param query: Query to filter documents
         :return: Count of matching documents
         """
-        logger.info(f"Counting documents in collection: {collection_name} with query: {query}")
+        logger.info(
+            f"Counting documents in collection: {collection_name} with query: {query}"
+        )
         collection = self.db[collection_name]
         count = collection.count_documents(query)
         logger.info(f"Count result: {count} document(s) found")
@@ -273,14 +282,20 @@ class MongoDBClient:
         :param query: Query to identify the documents
         :param soft_delete: If True, perform a soft delete by setting is_deleted to True
         """
-        logger.info(f"Deleting many documents in collection: {collection_name} with query: {query}")
+        logger.info(
+            f"Deleting many documents in collection: {collection_name} with query: {query}"
+        )
         collection = self.db[collection_name]
 
         if soft_delete:
             update_data = {"is_deleted": True}
             result = collection.update_many(query, {"$set": update_data})
-            logger.info(f"Soft delete result: {result.modified_count} document(s) modified")
+            logger.info(
+                f"Soft delete result: {result.modified_count} document(s) modified"
+            )
         else:
             result = collection.delete_many(query)
-            logger.info(f"Physical delete result: {result.deleted_count} document(s) deleted")
+            logger.info(
+                f"Physical delete result: {result.deleted_count} document(s) deleted"
+            )
         return result

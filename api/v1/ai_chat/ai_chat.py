@@ -2,12 +2,14 @@
 @Time ： 2024-11-23
 @Auth ： Adam Lyu
 """
-from pydantic import BaseModel, Field
+
 from fastapi import APIRouter, HTTPException, Request
-from utils.logger import Logger
-from utils.decorators import handle_response
+from pydantic import BaseModel, Field
+
 from services.ai_chat.ai_chat_service import AIChatService
 from services.user.auth_service import AuthService
+from utils.decorators import handle_response
+from utils.logger import Logger
 
 logger = Logger(__name__)
 router = APIRouter()
@@ -17,11 +19,13 @@ auth_service = AuthService()
 
 # Request body definition
 
+
 class ChatQueryRequest(BaseModel):
     query: str = Field(..., description="User's query content")
 
 
 # Route implementations
+
 
 @router.post("/query")
 @handle_response

@@ -4,9 +4,12 @@ Daily Workout Logs Service
 @Date: 2024-11-23
 @Author: Adam Lyu
 """
-from datetime import datetime, date as log_date
+
+from datetime import datetime
+
+from pymongo.results import InsertOneResult, UpdateResult
+
 from daos.workout.daily_workout_logs_dao import DailyWorkoutLogsDAO
-from pymongo.results import UpdateResult, InsertOneResult
 from utils.logger import Logger
 
 # Initialize logger
@@ -21,25 +24,38 @@ class DailyWorkoutLogsService:
         """
         Retrieve a workout log for a specific user and log date.
         """
-        logger.info(f"Service: Fetching workout log for user_id: {user_id}, log_date: {log_date}")
+        logger.info(
+            f"Service: Fetching workout log for user_id: {user_id}, log_date: {log_date}"
+        )
         try:
             log = self.dao.get_log_by_user_and_date(user_id, log_date)
             if log:
                 logger.debug(f"Workout log retrieved: {log}")
             else:
-                logger.warning(f"No workout log found for user_id: {user_id}, log_date: {log_date}")
+                logger.warning(
+                    f"No workout log found for user_id: {user_id}, log_date: {log_date}"
+                )
             return log
         except Exception as e:
             logger.error(f"Failed to retrieve workout log: {e}")
             raise
 
-    def create_or_update_workout_log(self, user_id, log_date=None, workout_content=None,
-                                     total_weight_lost=0, total_calories_burnt=0, avg_workout_duration=0):
+    def create_or_update_workout_log(
+            self,
+            user_id,
+            log_date=None,
+            workout_content=None,
+            total_weight_lost=0,
+            total_calories_burnt=0,
+            avg_workout_duration=0,
+    ):
         """
         Create or update a workout log for a specific user.
         """
         log_date = log_date or datetime.today().date()  # Use today's date if no date is provided
-        logger.info(f"Service: Creating or updating workout log for user_id {user_id} on log_date {log_date}")
+        logger.info(
+            f"Service: Creating or updating workout log for user_id {user_id} on log_date {log_date}"
+        )
 
         try:
             result = self.dao.create_or_update_log(
@@ -48,7 +64,7 @@ class DailyWorkoutLogsService:
                 workout_content=workout_content,
                 total_weight_lost=total_weight_lost,
                 total_calories_burnt=total_calories_burnt,
-                avg_workout_duration=avg_workout_duration
+                avg_workout_duration=avg_workout_duration,
             )
 
             # Handle MongoDB results to ensure they are serializable
@@ -56,34 +72,44 @@ class DailyWorkoutLogsService:
                 result_data = {
                     "matched_count": result.matched_count,
                     "modified_count": result.modified_count,
-                    "upserted_id": str(result.upserted_id) if result.upserted_id else None,
+                    "upserted_id": (
+                        str(result.upserted_id) if result.upserted_id else None
+                    ),
                 }
             elif isinstance(result, InsertOneResult):
                 result_data = {"inserted_id": str(result.inserted_id)}
             else:
                 result_data = result  # If it's already a dictionary
 
-            logger.info(f"Workout log successfully created/updated for user_id {user_id} on log_date {log_date}")
+            logger.info(
+                f"Workout log successfully created/updated for user_id {user_id} on log_date {log_date}"
+            )
             return result_data
         except Exception as e:
-            logger.error(f"Error creating or updating workout log for user_id {user_id}: {e}")
+            logger.error(
+                f"Error creating or updating workout log for user_id {user_id}: {e}"
+            )
             raise
 
     def update_workout_log_fields(self, user_id, log_date, update_fields):
         """
         Update specific fields of a workout log.
         """
-        logger.info(f"Service: Updating workout log fields for user_id: {user_id}, log_date: {log_date}")
+        logger.info(
+            f"Service: Updating workout log fields for user_id: {user_id}, log_date: {log_date}"
+        )
         try:
             result = self.dao.update_log_fields(
-                user_id=user_id,
-                log_date=log_date,
-                update_fields=update_fields
+                user_id=user_id, log_date=log_date, update_fields=update_fields
             )
             if result["matched_count"] > 0:
-                logger.info(f"Workout log fields successfully updated for user_id: {user_id}, log_date: {log_date}")
+                logger.info(
+                    f"Workout log fields successfully updated for user_id: {user_id}, log_date: {log_date}"
+                )
             else:
-                logger.warning(f"No workout log found to update for user_id: {user_id}, log_date: {log_date}")
+                logger.warning(
+                    f"No workout log found to update for user_id: {user_id}, log_date: {log_date}"
+                )
             return result
         except Exception as e:
             logger.error(f"Failed to update workout log fields: {e}")
@@ -119,28 +145,41 @@ class DailyWorkoutLogsService:
             logger.debug(f"Daily progress: {daily_progress}")
 
             # Calculate averages needed for frontend display
-            avg_calories_burnt_per_day = total_progress["total_calories_burnt"] / len(
-                daily_progress) if daily_progress else 0
-            avg_workout_duration_per_session = total_progress["total_duration"] / total_progress["total_sessions"] if \
-                total_progress["total_sessions"] > 0 else 0
+            avg_calories_burnt_per_day = (
+                total_progress["total_calories_burnt"] / len(daily_progress)
+                if daily_progress
+                else 0
+            )
+            avg_workout_duration_per_session = (
+                total_progress["total_duration"] / total_progress["total_sessions"]
+                if total_progress["total_sessions"] > 0
+                else 0
+            )
 
             result = {
                 "key_statistics": {
                     "total_weight_lost": total_progress["total_weight_lost"],
                     "total_calories_burnt": total_progress["total_calories_burnt"],
                     "avg_calories_burnt_per_day": round(avg_calories_burnt_per_day, 2),
-                    "avg_workout_duration_per_session": round(avg_workout_duration_per_session, 2),
+                    "avg_workout_duration_per_session": round(
+                        avg_workout_duration_per_session, 2
+                    ),
                 },
                 "daily_progress": [
                     {
-                        "log_date": item["_id"]["log_date"].strftime("%Y-%m-%d"),  # Convert date to string format
+                        "log_date": item["_id"]["log_date"].strftime(
+                            "%Y-%m-%d"
+                        ),  # Convert date to string format
                         "total_workout_time": item["total_workout_time"],
-                        "total_calories_burnt": item["total_calories_burnt"]
-                    } for item in daily_progress
-                ]
+                        "total_calories_burnt": item["total_calories_burnt"],
+                    }
+                    for item in daily_progress
+                ],
             }
             logger.info(f"Total progress calculated for user_id {user_id}: {result}")
             return result
         except Exception as e:
-            logger.error(f"Failed to calculate total progress for user_id {user_id}: {e}")
+            logger.error(
+                f"Failed to calculate total progress for user_id {user_id}: {e}"
+            )
             raise

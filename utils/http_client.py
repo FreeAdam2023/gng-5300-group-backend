@@ -1,4 +1,5 @@
 import requests
+
 from utils.logger import Logger  # Assumes a logger utility is available
 
 logger = Logger(__name__)

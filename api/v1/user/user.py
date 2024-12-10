@@ -2,12 +2,16 @@
 @Time ： 2024-11-23
 @Auth ： Adam Lyu
 """
-from fastapi import APIRouter, Body, Request, HTTPException
-from services.user.user_service import UserService
-from utils.logger import Logger
+
+from fastapi import APIRouter, Body, HTTPException, Request
+
 from services.user.auth_service import AuthService
+from services.user.user_service import UserService
+from services.user.validation import (LoginValidationSchema,
+                                      RegistrationValidationSchema,
+                                      UserProfileUpdateSchema)
 from utils.decorators import handle_response
-from services.user.validation import RegistrationValidationSchema, LoginValidationSchema, UserProfileUpdateSchema
+from utils.logger import Logger
 
 logger = Logger(__name__)
 router = APIRouter()
@@ -16,7 +20,7 @@ user_service = UserService()
 
 
 # User registration route
-@router.post('/register')
+@router.post("/register")
 @handle_response
 async def register(data: dict = Body(...)):
     schema = RegistrationValidationSchema()
@@ -24,9 +28,9 @@ async def register(data: dict = Body(...)):
     validated_data = schema.load(data)
 
     # Extract fields from validated data
-    username = validated_data['username']
-    email = validated_data['email']
-    password = validated_data['password']
+    username = validated_data["username"]
+    email = validated_data["email"]
+    password = validated_data["password"]
 
     # Register user
     user_id = auth_service.register_user(username, email, password)
@@ -35,7 +39,7 @@ async def register(data: dict = Body(...)):
 
 
 # User login route
-@router.post('/login')
+@router.post("/login")
 @handle_response
 async def login(data: dict = Body(...)):
     schema = LoginValidationSchema()
@@ -43,17 +47,17 @@ async def login(data: dict = Body(...)):
     validated_data = schema.load(data)
 
     # Extract fields from validated data
-    email = validated_data['email']
-    password = validated_data['password']
+    email = validated_data["email"]
+    password = validated_data["password"]
 
     # User login
     result = auth_service.login_user(email, password)
     logger.info(f"User logged in successfully: {result['user_id']}")
     return {
         "message": "Login successful",
-        "user_id": result['user_id'],
-        "username": result['username'],
-        "token": result['token'],
+        "user_id": result["user_id"],
+        "username": result["username"],
+        "token": result["token"],
     }
 
 

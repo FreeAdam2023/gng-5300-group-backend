@@ -4,12 +4,14 @@ Validation Schemas for User Operations
 @Date: 2024-11-23
 @Author: Adam Lyu
 """
-from marshmallow import Schema, fields, ValidationError, validates
+
+from marshmallow import Schema, ValidationError, fields, validates
 from pydantic import BaseModel, EmailStr, Field
+
 from daos.user.users_dao import UserDAO
 
-
 # Validation logic embedded in the schema
+
 
 class RegistrationValidationSchema(Schema):
     username = fields.Str(required=True)
@@ -20,7 +22,7 @@ class RegistrationValidationSchema(Schema):
         super().__init__(*args, **kwargs)
         self.user_dao = UserDAO()  # Initialize DAO instance
 
-    @validates('password')
+    @validates("password")
     def validate_password(self, value):
         """Validate password complexity"""
         if len(value) < 8:
@@ -32,7 +34,7 @@ class RegistrationValidationSchema(Schema):
         if not any(char.isdigit() for char in value):
             raise ValidationError("Password must contain at least one digit")
 
-    @validates('email')
+    @validates("email")
     def validate_email(self, value):
         """Check if email already exists in the database"""
         if self.user_dao.get_user_by_email(value):
@@ -43,7 +45,7 @@ class LoginValidationSchema(Schema):
     email = fields.Email(required=True)  # Automatically validates email format
     password = fields.Str(required=True)
 
-    @validates('password')
+    @validates("password")
     def validate_password(self, value):
         """Validate password length"""
         if len(value) < 6:
@@ -51,6 +53,7 @@ class LoginValidationSchema(Schema):
 
 
 # Update user profile validation (Pydantic)
+
 
 class UserProfileUpdateSchema(BaseModel):
     username: str = Field(None, max_length=50)

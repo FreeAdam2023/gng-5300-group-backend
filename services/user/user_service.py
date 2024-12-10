@@ -1,9 +1,10 @@
 from datetime import time
-from daos.user.users_dao import UserDAO
+
 from passlib.context import CryptContext
-from utils.auth_helpers import generate_reset_token
-from utils.logger import Logger
+
+from daos.user.users_dao import UserDAO
 from utils.env_loader import load_platform_specific_env
+from utils.logger import Logger
 
 load_platform_specific_env()
 logger = Logger(__name__)
@@ -30,12 +31,12 @@ class UserService:
         if not user:
             raise ValueError("Incorrect email or password")
 
-        stored_hashed_password = user['password']
+        stored_hashed_password = user["password"]
         logger.debug(f"Login - Stored Hashed Password: {stored_hashed_password}")
 
         if self.password_context.verify(password, stored_hashed_password):
             logger.debug("Login - Password match successful")
-            return user['_id'], user.get('username')
+            return user["_id"], user.get("username")
         else:
             logger.warning("Login - Password mismatch")
             raise ValueError("Incorrect email or password")
@@ -64,22 +65,22 @@ class UserService:
         self.user_dao.verify_email(user_id)
 
     # Request a password reset
-    def request_password_reset(self, email):
-        user = self.user_dao.get_user_by_email(email)
-        if not user:
-            raise ValueError("User does not exist")
-        token = generate_reset_token(user['_id'])
-        # send_reset_email(user, token)
+    # def request_password_reset(self, email):
+    #     user = self.user_dao.get_user_by_email(email)
+    #     if not user:
+    #         raise ValueError("User does not exist")
+    #     token = generate_reset_token(user["_id"])
+    #     # send_reset_email(user, token)
 
     # Change user status
     def change_user_status(self, user_id, status):
-        if status not in ['active', 'inactive', 'banned', 'deleted']:
+        if status not in ["active", "inactive", "banned", "deleted"]:
             raise ValueError("Invalid status")
         self.user_dao.update_user_status(user_id, status)
 
     # Change user role
     def change_user_role(self, user_id, role):
-        if role not in ['user', 'admin', 'moderator', 'vip']:
+        if role not in ["user", "admin", "moderator", "vip"]:
             raise ValueError("Invalid role")
         self.user_dao.update_user_info(user_id, role=role)
 
@@ -87,13 +88,18 @@ class UserService:
     def update_failed_login_attempt(self, user_id):
         user = self.user_dao.get_user_by_id(user_id)
         if user:
-            failed_attempts = user['failed_login_attempts'] + 1
-            self.user_dao.update_user_info(user_id, failed_login_attempts=failed_attempts,
-                                           last_failed_login=time.strftime('%Y-%m-%d %H:%M:%S'))
+            failed_attempts = user["failed_login_attempts"] + 1
+            self.user_dao.update_user_info(
+                user_id,
+                failed_login_attempts=failed_attempts,
+                last_failed_login=time.strftime("%Y-%m-%d %H:%M:%S"),
+            )
 
     # Reset failed login attempts after successful login
     def reset_failed_login_attempts(self, user_id):
-        self.user_dao.update_user_info(user_id, failed_login_attempts=0, last_failed_login=None)
+        self.user_dao.update_user_info(
+            user_id, failed_login_attempts=0, last_failed_login=None
+        )
 
     # Retrieve user information
     def get_user_info(self, user_id):

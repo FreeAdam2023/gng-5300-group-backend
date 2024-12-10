@@ -5,14 +5,16 @@ User Authentication Service
 @Author: Adam Lyu
 """
 
-from passlib.context import CryptContext
-from datetime import datetime, timedelta
 import os
-from jose import jwt, JWTError
-from fastapi import HTTPException, Request
+from datetime import datetime, timedelta
 from functools import wraps
+
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
 from services.user.user_service import UserService
 from utils.env_loader import load_platform_specific_env
 from utils.logger import Logger
@@ -27,10 +29,10 @@ security = HTTPBearer()  # Parses Bearer Token from the Authorization header
 class AuthService:
     def __init__(self):
         self.user_service = UserService()
-        self.secret_key = os.getenv('SECRET_KEY')
+        self.secret_key = os.getenv("SECRET_KEY")
         if not self.secret_key:
             raise ValueError("SECRET_KEY is not set in environment variables")
-        self.algorithm = os.getenv('ALGORITHM', 'HS256')
+        self.algorithm = os.getenv("ALGORITHM", "HS256")
         self.password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def register_user(self, username: str, email: str, password: str) -> str:
@@ -66,10 +68,14 @@ class AuthService:
         """
         now = datetime.now()
         refresh_token_payload = {
-            'user_id': user_id,  # Include user ID
-            'exp': int((now + timedelta(days=7)).timestamp())  # Token expiration set to 7 days
+            "user_id": user_id,  # Include user ID
+            "exp": int(
+                (now + timedelta(days=7)).timestamp()
+            ),  # Token expiration set to 7 days
         }
-        refresh_token = jwt.encode(refresh_token_payload, self.secret_key, algorithm=self.algorithm)
+        refresh_token = jwt.encode(
+            refresh_token_payload, self.secret_key, algorithm=self.algorithm
+        )
         logger.debug(f"Generated refresh_token -> {refresh_token}")
         return refresh_token
 
@@ -101,7 +107,9 @@ class AuthService:
         async def wrapper(request: Request, *args, **kwargs):
             authorization = request.headers.get("Authorization")
             if not authorization or not authorization.startswith("Bearer "):
-                raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+                raise HTTPException(
+                    status_code=401, detail="Missing or invalid Authorization header"
+                )
 
             token = authorization.split(" ")[1]
 
@@ -110,17 +118,19 @@ class AuthService:
                 request.state.user_id = user_id
                 return await func(request, *args, **kwargs)
             except HTTPException as e:
-                return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+                return JSONResponse(
+                    status_code=e.status_code, content={"detail": e.detail}
+                )
 
         return wrapper
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Test token verification
     auth_service = AuthService()
     try:
         user_id = auth_service.verify_token(
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsImV4cCI6MTczMzUyMDg3Mn0.aekSzrgOic0miyr_yNkVO8WxM5kn3kmOgltdL_skmCA'
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsImV4cCI6MTczMzUyMDg3Mn0.aekSzrgOic0miyr_yNkVO8WxM5kn3kmOgltdL_skmCA"
         )
         print(f"user_id -> {user_id}")
     except HTTPException as e:

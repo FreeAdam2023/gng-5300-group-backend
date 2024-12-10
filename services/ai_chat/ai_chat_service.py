@@ -2,19 +2,20 @@
 @Time ： 2024-11-28
 @Auth ： Adam Lyu
 """
+
 import os
-from pinecone import Pinecone
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.vectorstores import Pinecone as PineconeVectorStore
+
 from langchain.chains.question_answering import load_qa_chain
+from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+from langchain.vectorstores import Pinecone as PineconeVectorStore
 from langchain_groq import ChatGroq
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain_huggingface import HuggingFaceEmbeddings
+from pinecone import Pinecone
 
-from daos.workout.fitness_goal_dao import FitnessGoalDAO
-from utils.logger import Logger
 from daos.user.users_dao import UserDAO
-
+from daos.workout.fitness_goal_dao import FitnessGoalDAO
 from utils.env_loader import load_platform_specific_env
+from utils.logger import Logger
 
 # Load environment variables
 load_platform_specific_env()
@@ -33,7 +34,9 @@ class AIChatService:
             # Load embedding model
             embedding_model_name = "sentence-transformers/all-MiniLM-L6-v2"
             self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model_name)
-            logger.info(f"Embedding model '{embedding_model_name}' loaded successfully.")
+            logger.info(
+                f"Embedding model '{embedding_model_name}' loaded successfully."
+            )
 
             # Initialize vector store
             index_name = "gymrecommendation-huggingface"
@@ -53,14 +56,18 @@ class AIChatService:
             logger.info("Language model configured successfully.")
 
             # Create question-answering chain
-            self.chain = load_qa_chain(llm=self.llm, chain_type='stuff')
+            self.chain = load_qa_chain(llm=self.llm, chain_type="stuff")
             logger.info("Retrieval QA chain created successfully.")
 
             # Define response schemas for structured output
             self.response_schemas = [
                 ResponseSchema(name="Workout Name", description="Name of the workout"),
-                ResponseSchema(name="Duration", description="Duration of the workout in minutes"),
-                ResponseSchema(name="Difficulty", description="Difficulty level of the workout"),
+                ResponseSchema(
+                    name="Duration", description="Duration of the workout in minutes"
+                ),
+                ResponseSchema(
+                    name="Difficulty", description="Difficulty level of the workout"
+                ),
                 ResponseSchema(
                     name="Exercises",
                     description="List of exercises included in the workout. Each exercise includes its name and specific instructions.",
@@ -69,22 +76,39 @@ class AIChatService:
                         "items": {
                             "type": "object",
                             "properties": {
-                                "Name": {"type": "string", "description": "Name of the exercise"},
-                                "Instructions": {"type": "string",
-                                                 "description": "Step-by-step instructions for performing the exercise"}
+                                "Name": {
+                                    "type": "string",
+                                    "description": "Name of the exercise",
+                                },
+                                "Instructions": {
+                                    "type": "string",
+                                    "description": "Step-by-step instructions for performing the exercise",
+                                },
                             },
-                            "required": ["Name", "Instructions"]
-                        }
-                    }
+                            "required": ["Name", "Instructions"],
+                        },
+                    },
                 ),
-                ResponseSchema(name="Estimated Calories Burned",
-                               description="Estimated calories burned during the workout"),
-                ResponseSchema(name="Equipment Needed", description="List of equipment needed for the workout"),
-                ResponseSchema(name="Additional Tips", description="Any additional tips for the user"),
-                ResponseSchema(name="Total Calories Burned",
-                               description="Total calories burned for the entire workout plan")
+                ResponseSchema(
+                    name="Estimated Calories Burned",
+                    description="Estimated calories burned during the workout",
+                ),
+                ResponseSchema(
+                    name="Equipment Needed",
+                    description="List of equipment needed for the workout",
+                ),
+                ResponseSchema(
+                    name="Additional Tips",
+                    description="Any additional tips for the user",
+                ),
+                ResponseSchema(
+                    name="Total Calories Burned",
+                    description="Total calories burned for the entire workout plan",
+                ),
             ]
-            self.parser = StructuredOutputParser.from_response_schemas(self.response_schemas)
+            self.parser = StructuredOutputParser.from_response_schemas(
+                self.response_schemas
+            )
             self.format_instructions = self.parser.get_format_instructions()
             logger.info("StructuredOutputParser initialized successfully.")
 
@@ -101,7 +125,9 @@ class AIChatService:
         try:
             logger.info(f"Retrieving query '{query}' with top {k} results...")
             results = self.vector_store.similarity_search(query, k=k)
-            logger.info(f"Query retrieved successfully. {len(results)} documents found.")
+            logger.info(
+                f"Query retrieved successfully. {len(results)} documents found."
+            )
             return results
         except Exception as e:
             logger.error(f"Error retrieving query: {str(e)}")
@@ -139,7 +165,9 @@ class AIChatService:
     def retrieve_answer(self, user_id, query):
         """Generate an answer based on user input."""
         try:
-            logger.info(f"Retrieving answer for user_id {user_id} and query '{query}'...")
+            logger.info(
+                f"Retrieving answer for user_id {user_id} and query '{query}'..."
+            )
 
             # Retrieve user and fitness goal information
             user_info = self.user_dao.get_user_by_id(user_id)
@@ -170,10 +198,12 @@ class AIChatService:
             question = self.generate_prompt(input_data)
 
             # Get results from QA chain
-            response = self.chain.invoke({
-                "input_documents": matching_docs,
-                "question": question,
-            })
+            response = self.chain.invoke(
+                {
+                    "input_documents": matching_docs,
+                    "question": question,
+                }
+            )
 
             # Parse response
             parsed_output = self.parser.parse(response["output_text"])
@@ -196,12 +226,14 @@ if __name__ == "__main__":
     logger.info("AIChatService initialized for testing.")
 
     # Define a test user ID and query
-    test_user_id = '6741f0e75b6291baa9b7a273'  # Replace with a valid test user ID
+    test_user_id = "6741f0e75b6291baa9b7a273"  # Replace with a valid test user ID
     test_query = "What is the best exercise for weight loss?"
 
     try:
         # Test retrieve_answer method
-        logger.info(f"Testing retrieve_answer for user_id {test_user_id} with query '{test_query}'...")
+        logger.info(
+            f"Testing retrieve_answer for user_id {test_user_id} with query '{test_query}'..."
+        )
         response = service.retrieve_answer(user_id=test_user_id, query=test_query)
 
         # Print test output

@@ -1,10 +1,12 @@
 import os
-import sys
 import socket  # Used to get the computer hostname
+import sys
+
 from dotenv import load_dotenv
 
 # Flag to indicate whether environment variables have already been loaded
 ENV_LOADED = False
+
 
 def load_platform_specific_env():
     """
@@ -29,7 +31,7 @@ def load_platform_specific_env():
 
     # Load the common .env.common file
     load_dotenv(os.path.join(project_root, "env_config/.env.common"))
-    print(f"Loaded environment variables from env_config/.env.common")
+    print("Loaded environment variables from env_config/.env.common")
 
     # Load environment-specific file based on OS and hostname
     if sys.platform == "darwin":  # macOS
