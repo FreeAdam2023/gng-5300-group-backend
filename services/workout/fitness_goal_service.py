@@ -6,9 +6,9 @@ Fitness Goal Service
 """
 
 from daos.workout.fitness_goal_dao import FitnessGoalDAO
-from services.workout.validation import (
+from services.workout.validation import (  # Import validation model
     CreateOrUpdateGoalRequest,
-)  # Import validation model
+)
 from utils.logger import Logger
 
 logger = Logger(__name__)
