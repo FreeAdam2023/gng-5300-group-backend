@@ -165,4 +165,3 @@ class UserDAO:
             else:
                 logger.warning(f"No user found with email: {email}")
             return result
-

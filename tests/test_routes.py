@@ -1,12 +1,13 @@
 import sys
 from unittest.mock import MagicMock
+
 import pytest
 
 # 动态模拟缺失的模块（可扩展）
 mocked_modules = {
-    'langchain_groq': MagicMock(),
-    'langchain_huggingface': MagicMock(),
-    'pinecone': MagicMock(),
+    "langchain_groq": MagicMock(),
+    "langchain_huggingface": MagicMock(),
+    "pinecone": MagicMock(),
 }
 sys.modules.update(mocked_modules)
 
