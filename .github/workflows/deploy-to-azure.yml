@@ -22,9 +22,9 @@ jobs:
       # Lint and format check
       - name: Lint and Format Check
         run: |
-          isort --check-only .  # 导入顺序检查
-          black --check .  # 格式化检查
-          flake8 .  # 代码质量检查
+          isort --check-only .  # Import order check
+          black --check . # Format check
+          flake8 .  # Code quality check
 
       # Log in to GitHub Container Registry (GHCR)
       - name: Log in to GitHub Container Registry
