@@ -53,13 +53,13 @@ class DailyWorkoutLogsDAO:
         return log
 
     def create_or_update_log(
-        self,
-        user_id,
-        log_date,
-        workout_content,
-        total_weight_lost,
-        total_calories_burnt,
-        avg_workout_duration,
+            self,
+            user_id,
+            log_date,
+            workout_content,
+            total_weight_lost,
+            total_calories_burnt,
+            avg_workout_duration,
     ):
         """Create or update a workout log for a user."""
         logger.info(
@@ -192,6 +192,33 @@ class DailyWorkoutLogsDAO:
             logger.error(
                 f"Failed to calculate total progress for user_id {user_id}: {e}"
             )
+            raise
+
+    def calculate_daily_progress(self, user_id):
+        """
+        Calculate daily workout progress for a user based on all workout logs.
+        """
+        logger.info(f"Calculating daily workout progress for user_id: {user_id}")
+        query = {"user_id": ObjectId(user_id), "is_deleted": False}
+
+        try:
+            with self.db_client as db_client:
+                pipeline = [
+                    {"$match": query},
+                    {
+                        "$group": {
+                            "_id": {"log_date": "$log_date"},  # 按日期分组
+                            "total_workout_time": {"$sum": "$avg_workout_duration"},  # 按天总锻炼时间
+                            "total_calories_burnt": {"$sum": "$total_calories_burnt"}  # 按天总卡路里
+                        }
+                    },
+                    {"$sort": {"_id.log_date": 1}}  # 按日期升序排序
+                ]
+                daily_results = list(db_client.db[self.collection_name].aggregate(pipeline))
+                logger.debug(f"Daily progress results: {daily_results}")
+                return daily_results
+        except Exception as e:
+            logger.error(f"Failed to calculate daily workout progress for user_id {user_id}: {e}")
             raise
 
 
