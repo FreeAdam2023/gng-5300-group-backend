@@ -41,18 +41,20 @@ class DailyWorkoutLogsService:
             raise
 
     def create_or_update_workout_log(
-            self,
-            user_id,
-            log_date=None,
-            workout_content=None,
-            total_weight_lost=0,
-            total_calories_burnt=0,
-            avg_workout_duration=0,
+        self,
+        user_id,
+        log_date=None,
+        workout_content=None,
+        total_weight_lost=0,
+        total_calories_burnt=0,
+        avg_workout_duration=0,
     ):
         """
         Create or update a workout log for a specific user.
         """
-        log_date = log_date or datetime.today().date()  # Use today's date if no date is provided
+        log_date = (
+            log_date or datetime.today().date()
+        )  # Use today's date if no date is provided
         logger.info(
             f"Service: Creating or updating workout log for user_id {user_id} on log_date {log_date}"
         )

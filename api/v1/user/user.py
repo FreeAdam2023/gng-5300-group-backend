@@ -7,9 +7,11 @@ from fastapi import APIRouter, Body, HTTPException, Request
 
 from services.user.auth_service import AuthService
 from services.user.user_service import UserService
-from services.user.validation import (LoginValidationSchema,
-                                      RegistrationValidationSchema,
-                                      UserProfileUpdateSchema)
+from services.user.validation import (
+    LoginValidationSchema,
+    RegistrationValidationSchema,
+    UserProfileUpdateSchema,
+)
 from utils.decorators import handle_response
 from utils.logger import Logger
 

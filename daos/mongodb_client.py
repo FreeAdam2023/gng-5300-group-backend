@@ -211,7 +211,7 @@ class MongoDBClient:
         return result
 
     def find_many(
-            self, collection_name, query, include_deleted=False, sort=None, limit=0, skip=0
+        self, collection_name, query, include_deleted=False, sort=None, limit=0, skip=0
     ):
         """
         Find multiple documents, supporting sorting, limit, and skip options.
